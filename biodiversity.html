@@ -1,0 +1,635 @@
+{% extends "base.html" %} {% block title %}Biodiversity Management | EcoTrack{%
+endblock %} {% block extra_css %}
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #405447;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .search-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dfe8e1;
+    border-radius: 7px;
+    outline: none;
+    background: white;
+    font-size: 13px;
+  }
+
+  .form-group textarea {
+    min-height: 85px;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: #247548;
+    box-shadow: 0 0 0 3px rgba(36, 117, 72, 0.08);
+  }
+
+  .form-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+  }
+
+  .secondary-btn {
+    background: #eaf3ec;
+    color: #247548;
+    padding: 11px 17px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .search-input {
+    margin-bottom: 18px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+  }
+
+  th {
+    background: #edf5ee;
+    color: #315b3f;
+    text-align: left;
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid #edf0ed;
+    font-size: 12px;
+    color: #526057;
+  }
+
+  .status {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-normal {
+    background: #e3f3e7;
+    color: #247548;
+  }
+
+  .status-threatened {
+    background: #fff2dc;
+    color: #a66a13;
+  }
+
+  .status-endangered {
+    background: #ffeded;
+    color: #ba4141;
+  }
+
+  .status-critical {
+    background: #f8e1e1;
+    color: #9c2525;
+  }
+
+  .action-btn {
+    padding: 7px 11px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    margin: 2px;
+  }
+
+  .edit-btn {
+    background: #e8f0fb;
+    color: #3265a3;
+  }
+
+  .delete-btn {
+    background: #ffeded;
+    color: #ba4141;
+  }
+
+  .message {
+    display: none;
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 7px;
+    font-size: 13px;
+  }
+
+  .message.success {
+    display: block;
+    background: #e8f5eb;
+    color: #247548;
+  }
+
+  .message.error {
+    display: block;
+    background: #fff0ef;
+    color: #b33d35;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #849087;
+  }
+
+  @media (max-width: 650px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full,
+    .form-buttons {
+      grid-column: auto;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="page-heading">
+  <h1>Biodiversity Management</h1>
+  <p>Record species observations and monitor biodiversity conservation.</p>
+</div>
+
+<div class="card" id="biodiversityFormCard">
+  <h2
+    id="formTitle"
+    style="font-size: 17px; color: #244533; margin-bottom: 20px"
+  >
+    Add Species Record
+  </h2>
+
+  <form id="biodiversityForm" class="form-grid">
+    <div class="form-group full">
+      <label>Select Project *</label>
+      <select id="project_id" required>
+        <option value="">Loading projects...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Species Name *</label>
+      <input
+        type="text"
+        id="species_name"
+        placeholder="Enter species name"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Species Type</label>
+      <select id="species_type">
+        <option value="">Select type</option>
+        <option>Plant</option>
+        <option>Tree</option>
+        <option>Bird</option>
+        <option>Mammal</option>
+        <option>Reptile</option>
+        <option>Amphibian</option>
+        <option>Insect</option>
+        <option>Aquatic Species</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Conservation Status</label>
+      <select id="conservation_status">
+        <option value="Not Evaluated">Not Evaluated</option>
+        <option value="Least Concern">Least Concern</option>
+        <option value="Near Threatened">Near Threatened</option>
+        <option value="Vulnerable">Vulnerable</option>
+        <option value="Endangered">Endangered</option>
+        <option value="Critically Endangered">Critically Endangered</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Observation Date</label>
+      <input type="date" id="observation_date" />
+    </div>
+
+    <div class="form-group full">
+      <label>Description</label>
+      <textarea
+        id="description"
+        placeholder="Enter species observation details..."
+      ></textarea>
+    </div>
+
+    <div class="form-buttons">
+      <button type="submit" class="btn" id="saveBtn">Add Species</button>
+
+      <button
+        type="button"
+        class="secondary-btn"
+        id="cancelBtn"
+        onclick="resetForm()"
+        style="display: none"
+      >
+        Cancel Edit
+      </button>
+    </div>
+  </form>
+
+  <div id="formMessage" class="message"></div>
+</div>
+
+<div class="card">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    "
+  >
+    <h2 style="font-size: 17px; color: #244533">Species Records</h2>
+
+    <span id="recordCount" style="font-size: 12px; color: #78857d">
+      Loading...
+    </span>
+  </div>
+
+  <input
+    type="text"
+    id="searchInput"
+    class="search-input"
+    placeholder="Search species, type or conservation status..."
+  />
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Species Name</th>
+          <th>Type</th>
+          <th>Conservation Status</th>
+          <th>Observation Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="biodiversityTable">
+        <tr>
+          <td colspan="6" class="empty-state">Loading species...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tableMessage" class="message"></div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  let records = [];
+  let projects = [];
+  let editingId = null;
+  let currentRole = "";
+
+  const form = document.getElementById("biodiversityForm");
+  const table = document.getElementById("biodiversityTable");
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(
+      /[&<>"']/g,
+      (char) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char],
+    );
+  }
+
+  function showMessage(id, text, type) {
+    const element = document.getElementById(id);
+    element.textContent = text;
+    element.className = "message " + type;
+  }
+
+  async function loadSession() {
+    try {
+      const response = await fetch("/api/auth/check-session");
+
+      if (!response.ok) {
+        window.location.href = "/login";
+        return false;
+      }
+
+      const data = await response.json();
+      currentRole = data.user_role || "";
+      return true;
+    } catch (error) {
+      showMessage("tableMessage", "Unable to check login session.", "error");
+      return false;
+    }
+  }
+
+  async function loadProjects() {
+    const response = await fetch("/api/projects/");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Unable to load projects");
+    }
+
+    projects = data.projects || [];
+
+    const dropdown = document.getElementById("project_id");
+    dropdown.innerHTML = '<option value="">Select project</option>';
+
+    projects.forEach((project) => {
+      const option = document.createElement("option");
+      option.value = project.id;
+      option.textContent = project.project_name;
+      dropdown.appendChild(option);
+    });
+  }
+
+  async function loadRecords() {
+    try {
+      const response = await fetch("/api/biodiversity/");
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || "Unable to load species records",
+        );
+      }
+
+      records = data.records || data.species || data.biodiversity || [];
+
+      document.getElementById("recordCount").textContent =
+        records.length + " species records";
+
+      renderRecords();
+    } catch (error) {
+      table.innerHTML = `<tr><td colspan="6" class="empty-state">
+            ${escapeHTML(error.message)}
+        </td></tr>`;
+    }
+  }
+
+  function renderRecords() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered = records.filter((record) =>
+      [
+        record.project_name,
+        record.species_name,
+        record.species_type,
+        record.conservation_status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="6" class="empty-state">
+            No species records found.
+        </td></tr>`;
+      return;
+    }
+
+    table.innerHTML = filtered
+      .map((record) => {
+        const status = String(record.conservation_status || "Not Evaluated")
+          .toLowerCase()
+          .replace(/[^a-z]+/g, "-");
+
+        let statusClass = "status-normal";
+
+        if (status.includes("critical")) {
+          statusClass = "status-critical";
+        } else if (
+          status.includes("endangered") ||
+          status.includes("vulnerable")
+        ) {
+          statusClass = "status-endangered";
+        } else if (status.includes("threatened")) {
+          statusClass = "status-threatened";
+        }
+
+        const editButton = ["admin", "manager"].includes(currentRole)
+          ? `<button class="action-btn edit-btn"
+                       onclick="editRecord(${Number(record.id)})">Edit</button>`
+          : "";
+
+        const deleteButton =
+          currentRole === "admin"
+            ? `<button class="action-btn delete-btn"
+                       onclick="deleteRecord(${Number(record.id)})">Delete</button>`
+            : "";
+
+        return `
+        <tr>
+            <td><strong>${escapeHTML(record.project_name)}</strong></td>
+            <td>${escapeHTML(record.species_name)}</td>
+            <td>${escapeHTML(record.species_type || "-")}</td>
+            <td><span class="status ${statusClass}">
+                ${escapeHTML(record.conservation_status || "Not Evaluated")}
+            </span></td>
+            <td>${escapeHTML(record.observation_date || "-")}</td>
+            <td>${editButton}${deleteButton}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      showMessage("formMessage", "Permission denied.", "error");
+      return;
+    }
+
+    const payload = {
+      project_id: Number(document.getElementById("project_id").value),
+      species_name: document.getElementById("species_name").value.trim(),
+      species_type: document.getElementById("species_type").value,
+      conservation_status: document.getElementById("conservation_status").value,
+      observation_date:
+        document.getElementById("observation_date").value || null,
+      description: document.getElementById("description").value.trim(),
+    };
+
+    if (!payload.species_name) {
+      showMessage("formMessage", "Species name is required.", "error");
+      return;
+    }
+
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+
+    try {
+      const response = await fetch(
+        editingId
+          ? `/api/biodiversity/update/${editingId}`
+          : "/api/biodiversity/add",
+        {
+          method: editingId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || result.message || "Unable to save species",
+        );
+      }
+
+      showMessage(
+        "formMessage",
+        result.message || "Species record saved successfully.",
+        "success",
+      );
+
+      resetForm();
+      await loadRecords();
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function editRecord(id) {
+    const record = records.find((item) => Number(item.id) === Number(id));
+    if (!record) return;
+
+    editingId = id;
+
+    document.getElementById("project_id").value = record.project_id;
+    document.getElementById("species_name").value = record.species_name || "";
+    document.getElementById("species_type").value = record.species_type || "";
+    document.getElementById("conservation_status").value =
+      record.conservation_status || "Not Evaluated";
+    document.getElementById("observation_date").value =
+      record.observation_date || "";
+    document.getElementById("description").value = record.description || "";
+
+    document.getElementById("formTitle").textContent = "Update Species Record";
+    document.getElementById("saveBtn").textContent = "Update Species";
+    document.getElementById("cancelBtn").style.display = "inline-block";
+
+    document
+      .getElementById("biodiversityFormCard")
+      .scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function deleteRecord(id) {
+    if (currentRole !== "admin") {
+      showMessage(
+        "tableMessage",
+        "Only administrators can delete records.",
+        "error",
+      );
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this species record?"))
+      return;
+
+    try {
+      const response = await fetch(`/api/biodiversity/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || result.message || "Delete failed");
+      }
+
+      showMessage(
+        "tableMessage",
+        result.message || "Species record deleted.",
+        "success",
+      );
+      await loadRecords();
+    } catch (error) {
+      showMessage("tableMessage", error.message, "error");
+    }
+  }
+
+  function resetForm() {
+    form.reset();
+    editingId = null;
+
+    document.getElementById("formTitle").textContent = "Add Species Record";
+    document.getElementById("saveBtn").textContent = "Add Species";
+    document.getElementById("cancelBtn").style.display = "none";
+  }
+
+  document
+    .getElementById("searchInput")
+    .addEventListener("input", renderRecords);
+
+  (async function initialize() {
+    const loggedIn = await loadSession();
+    if (!loggedIn) return;
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      document.getElementById("biodiversityFormCard").style.display = "none";
+    }
+
+    try {
+      await loadProjects();
+      await loadRecords();
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    }
+  })();
+</script>
+{% endblock %}

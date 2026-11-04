@@ -1,0 +1,906 @@
+{% extends "base.html" %} {% block title %}Dashboard | EcoTrack{% endblock %} {%
+block page_heading %}Dashboard Overview{% endblock %} {% block extra_css %}
+<style>
+  /* DASHBOARD HEADER */
+
+  .welcome-section {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 30px 32px;
+    margin-bottom: 25px;
+    border-radius: 19px;
+    background: linear-gradient(115deg, #075b40, #059669, #36a879);
+    box-shadow: 0 12px 28px rgba(5, 150, 105, 0.16);
+    color: white;
+  }
+
+  .welcome-section::after {
+    content: "";
+    position: absolute;
+    right: 55px;
+    top: -100px;
+    width: 230px;
+    height: 230px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 30px rgba(255, 255, 255, 0.035),
+      0 0 0 60px rgba(255, 255, 255, 0.025);
+    pointer-events: none;
+  }
+
+  .welcome-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .welcome-text .welcome-label {
+    color: #c6f5dc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .welcome-text h1 {
+    color: white;
+    font-family: "Manrope", sans-serif;
+    font-size: 27px;
+    font-weight: 800;
+    margin-bottom: 9px;
+  }
+
+  .welcome-text p {
+    color: #d9f5e6;
+    font-size: 13px;
+  }
+
+  .system-status {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 30px;
+    padding: 11px 16px;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+  }
+
+  .system-status i {
+    color: #8df2b9;
+    margin-right: 7px;
+  }
+
+  /* SECTION HEADERS */
+
+  .section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 28px 0 17px;
+  }
+
+  .section-heading h2 {
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #18372b;
+    margin: 0;
+  }
+
+  .section-heading p {
+    font-size: 11px;
+    color: #91a196;
+    margin-top: 5px;
+  }
+
+  /* KPI CARDS */
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    position: relative;
+    overflow: hidden;
+    background: white;
+    border: 1px solid #e5eee8;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(18, 65, 43, 0.045);
+    transition: 0.25s;
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(18, 65, 43, 0.1);
+  }
+
+  .kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 17px;
+  }
+
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+  }
+
+  .kpi-icon.green {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .kpi-icon.blue {
+    background: #e0efff;
+    color: #438ed6;
+  }
+
+  .kpi-icon.orange {
+    background: #fff0d6;
+    color: #d68b25;
+  }
+
+  .kpi-icon.purple {
+    background: #eee7ff;
+    color: #9167ce;
+  }
+
+  .kpi-label {
+    color: #7a8d80;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .kpi-value {
+    font-family: "Manrope", sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #18372b;
+    margin: 7px 0;
+    letter-spacing: -0.8px;
+    word-break: break-word;
+  }
+
+  .kpi-note {
+    color: #91a196;
+    font-size: 10px;
+  }
+
+  /* CHART LAYOUT */
+
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 19px;
+    margin-bottom: 24px;
+  }
+
+  .analytics-card {
+    background: white;
+    border: 1px solid #e5eee8;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 5px 20px rgba(18, 65, 43, 0.045);
+    min-width: 0;
+  }
+
+  .analytics-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .analytics-title h3 {
+    color: #18372b;
+    font-family: "Manrope", sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .analytics-title span {
+    color: #91a196;
+    font-size: 10px;
+  }
+
+  .chart-box {
+    width: 100%;
+    height: 270px;
+    position: relative;
+  }
+
+  .chart-box canvas {
+    max-width: 100%;
+  }
+
+  /* SUMMARY CARDS */
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+
+  .summary-card {
+    background: white;
+    border: 1px solid #e5eee8;
+    border-radius: 14px;
+    padding: 19px;
+    box-shadow: 0 5px 20px rgba(18, 65, 43, 0.04);
+  }
+
+  .summary-card h4 {
+    font-size: 12px;
+    color: #718579;
+    margin-bottom: 13px;
+  }
+
+  .summary-card strong {
+    display: block;
+    font-family: "Manrope", sans-serif;
+    font-size: 22px;
+    color: #18372b;
+    margin-bottom: 12px;
+  }
+
+  .summary-card .summary-description {
+    color: #91a196;
+    font-size: 10px;
+  }
+
+  /* MODULE CARDS */
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+
+  .module-card {
+    display: block;
+    background: white;
+    border: 1px solid #e5eee8;
+    border-radius: 15px;
+    padding: 21px;
+    min-height: 158px;
+    box-shadow: 0 5px 20px rgba(18, 65, 43, 0.04);
+    transition: 0.25s;
+  }
+
+  .module-card:hover {
+    transform: translateY(-4px);
+    border-color: #9bd8b7;
+    box-shadow: 0 12px 25px rgba(18, 65, 43, 0.09);
+  }
+
+  .module-icon {
+    width: 43px;
+    height: 43px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #e4f7eb;
+    color: #059669;
+    font-size: 19px;
+    margin-bottom: 15px;
+  }
+
+  .module-card h3 {
+    font-family: "Manrope", sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #18372b;
+    margin-bottom: 7px;
+  }
+
+  .module-card p {
+    color: #839388;
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .module-arrow {
+    display: flex;
+    justify-content: flex-end;
+    color: #059669;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+
+  /* LOADING AND ERROR */
+
+  .dashboard-error {
+    display: none;
+    background: #fff0f0;
+    color: #a93434;
+    padding: 12px 15px;
+    border-radius: 9px;
+    margin-bottom: 15px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 1100px) {
+    .kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .welcome-section {
+      padding: 23px;
+    }
+
+    .welcome-text h1 {
+      font-size: 22px;
+    }
+
+    .modules-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 450px) {
+    .kpi-grid,
+    .modules-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .kpi-value {
+      font-size: 25px;
+    }
+
+    .chart-box {
+      height: 230px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<!-- WELCOME BANNER -->
+
+<div class="welcome-section">
+  <div class="welcome-text">
+    <div class="welcome-label">
+      <i class="fa-solid fa-leaf"></i>
+      ENVIRONMENTAL MANAGEMENT SYSTEM
+    </div>
+
+    <h1>Welcome back, {{ user_name }}! 🌿</h1>
+
+    <p>
+      Monitor your environmental initiatives and track your contribution towards
+      a sustainable future.
+    </p>
+  </div>
+
+  <div class="system-status">
+    <i class="fa-solid fa-circle-check"></i>
+    System Active
+  </div>
+</div>
+
+<div id="dashboardError" class="dashboard-error"></div>
+
+<!-- KEY PERFORMANCE INDICATORS -->
+
+<div class="section-heading">
+  <div>
+    <h2>Environmental Overview</h2>
+    <p>Your environmental performance at a glance</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon green">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Total Projects</div>
+    <div class="kpi-value" id="totalProjects">--</div>
+    <div class="kpi-note">Registered environmental projects</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon blue">
+        <i class="fa-solid fa-seedling"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Sustainability Activities</div>
+    <div class="kpi-value" id="totalActivities">--</div>
+    <div class="kpi-note">Recorded sustainability activities</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon orange">
+        <i class="fa-solid fa-tree"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Trees & Plants</div>
+    <div class="kpi-value" id="totalTrees">--</div>
+    <div class="kpi-note">Recorded achievements</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon purple">
+        <i class="fa-solid fa-earth-asia"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Restored Area</div>
+    <div class="kpi-value" id="totalRestored">--</div>
+    <div class="kpi-note">Total area restored</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon blue">
+        <i class="fa-solid fa-cloud"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Carbon Emissions</div>
+    <div class="kpi-value" id="totalEmissions">--</div>
+    <div class="kpi-note">Recorded emissions</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon green">
+        <i class="fa-solid fa-leaf"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Carbon Reduction</div>
+    <div class="kpi-value" id="totalReductions">--</div>
+    <div class="kpi-note">Recorded emission reductions</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon orange">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Verified Carbon Credits</div>
+    <div class="kpi-value" id="verifiedCredits">--</div>
+    <div class="kpi-note">Credits marked as verified</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-top">
+      <div class="kpi-icon purple">
+        <i class="fa-solid fa-dove"></i>
+      </div>
+    </div>
+
+    <div class="kpi-label">Biodiversity Records</div>
+    <div class="kpi-value" id="biodiversityRecords">--</div>
+    <div class="kpi-note">Recorded species observations</div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+
+<div class="section-heading">
+  <div>
+    <h2>Environmental Analytics</h2>
+    <p>Visual insights from your recorded environmental data</p>
+  </div>
+</div>
+
+<div class="analytics-grid">
+  <div class="analytics-card">
+    <div class="analytics-title">
+      <h3>Carbon Impact Analysis</h3>
+      <span><i class="fa-solid fa-chart-column"></i> Overview</span>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="carbonChart"></canvas>
+    </div>
+  </div>
+
+  <div class="analytics-card">
+    <div class="analytics-title">
+      <h3>Project Status Distribution</h3>
+      <span><i class="fa-solid fa-chart-pie"></i> Projects</span>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="projectChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- CARBON AND RESTORATION SUMMARY -->
+
+<div class="section-heading">
+  <div>
+    <h2>Impact Summary</h2>
+    <p>Additional environmental performance indicators</p>
+  </div>
+</div>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <h4>
+      <i class="fa-solid fa-tree" style="color: #059669"></i> Restoration
+      Progress
+    </h4>
+
+    <strong id="restorationValue">--</strong>
+
+    <div class="progress-bar-container">
+      <div
+        class="progress-bar"
+        id="restorationProgress"
+        style="width: 0%"
+      ></div>
+    </div>
+
+    <p class="summary-description" id="restorationDescription">
+      Loading restoration information...
+    </p>
+  </div>
+
+  <div class="summary-card">
+    <h4>
+      <i class="fa-solid fa-cloud-arrow-down" style="color: #438ed6"></i> Carbon
+      Sequestration
+    </h4>
+
+    <strong id="sequestrationValue">--</strong>
+
+    <p class="summary-description">Recorded carbon sequestration value</p>
+  </div>
+
+  <div class="summary-card">
+    <h4>
+      <i class="fa-solid fa-certificate" style="color: #d68b25"></i> Issued
+      Carbon Credits
+    </h4>
+
+    <strong id="issuedCredits">--</strong>
+
+    <p class="summary-description">Total credits recorded as issued</p>
+  </div>
+</div>
+
+<!-- MANAGEMENT MODULES -->
+
+<div class="section-heading">
+  <div>
+    <h2>Management Modules</h2>
+    <p>Access your environmental management workspace</p>
+  </div>
+</div>
+
+<div class="modules-grid">
+  <a href="/projects" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-folder-open"></i>
+    </div>
+    <h3>Project Management</h3>
+    <p>View and manage environmental projects.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/sustainability" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-seedling"></i>
+    </div>
+    <h3>Sustainability</h3>
+    <p>Track plantation, water, energy and waste activities.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/restoration" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-tree"></i>
+    </div>
+    <h3>Ecosystem Restoration</h3>
+    <p>Monitor restoration targets and achievements.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/carbon" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-cloud"></i>
+    </div>
+    <h3>Carbon Management</h3>
+    <p>Monitor emissions, reductions and sequestration.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/carbon-credits" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-coins"></i>
+    </div>
+    <h3>Carbon Credits</h3>
+    <p>Track estimated, verified and issued credits.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/biodiversity" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-dove"></i>
+    </div>
+    <h3>Biodiversity</h3>
+    <p>Maintain species and conservation observations.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+
+  <a href="/reports" class="module-card">
+    <div class="module-icon">
+      <i class="fa-solid fa-chart-column"></i>
+    </div>
+    <h3>Reports & Analytics</h3>
+    <p>Explore environmental performance reports.</p>
+    <div class="module-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  </a>
+</div>
+
+{% endblock %} {% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  let carbonChartInstance = null;
+  let projectChartInstance = null;
+
+  function setValue(id, value, decimals = 2) {
+    const element = document.getElementById(id);
+
+    if (!element) return;
+
+    const number = Number(value ?? 0);
+
+    element.textContent = Number.isFinite(number)
+      ? number.toLocaleString("en-IN", {
+          maximumFractionDigits: decimals,
+        })
+      : "0";
+  }
+
+  function showDashboardError(message) {
+    const errorElement = document.getElementById("dashboardError");
+
+    if (!errorElement) return;
+
+    errorElement.textContent = message;
+    errorElement.style.display = "block";
+  }
+
+  function updateCarbonChart(data) {
+    const canvas = document.getElementById("carbonChart");
+
+    if (!canvas || typeof Chart === "undefined") return;
+
+    if (carbonChartInstance) {
+      carbonChartInstance.destroy();
+    }
+
+    carbonChartInstance = new Chart(canvas, {
+      type: "bar",
+
+      data: {
+        labels: ["Emissions", "Reductions", "Sequestration"],
+
+        datasets: [
+          {
+            label: "Recorded Value",
+
+            data: [
+              Number(data.total_emissions ?? 0),
+              Number(data.total_reductions ?? 0),
+              Number(data.total_sequestration ?? 0),
+            ],
+
+            backgroundColor: ["#438ed6", "#10a875", "#9acb9d"],
+
+            borderRadius: 8,
+            maxBarThickness: 48,
+          },
+        ],
+      },
+
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: "#edf2ee",
+            },
+            ticks: {
+              color: "#819187",
+            },
+          },
+
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              color: "#718579",
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function updateProjectChart(data) {
+    const canvas = document.getElementById("projectChart");
+
+    if (!canvas || typeof Chart === "undefined") return;
+
+    if (projectChartInstance) {
+      projectChartInstance.destroy();
+    }
+
+    projectChartInstance = new Chart(canvas, {
+      type: "doughnut",
+
+      data: {
+        labels: ["Active", "Completed", "On Hold"],
+
+        datasets: [
+          {
+            data: [
+              Number(data.active_projects ?? 0),
+              Number(data.completed_projects ?? 0),
+              Number(data.on_hold_projects ?? 0),
+            ],
+
+            backgroundColor: ["#10a875", "#438ed6", "#e9a23b"],
+
+            borderWidth: 0,
+            hoverOffset: 7,
+          },
+        ],
+      },
+
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        cutout: "70%",
+
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              usePointStyle: true,
+              padding: 18,
+              color: "#718579",
+              font: {
+                size: 11,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async function loadDashboard() {
+    try {
+      const response = await fetch("/api/reports/");
+
+      if (!response.ok) {
+        throw new Error("Unable to load dashboard information.");
+      }
+
+      const data = await response.json();
+
+      // KPI CARDS
+      setValue("totalProjects", data.total_projects, 0);
+      setValue("totalActivities", data.total_activities, 0);
+      setValue("totalTrees", data.total_trees, 0);
+      setValue("totalRestored", data.total_restored_area);
+      setValue("totalEmissions", data.total_emissions);
+      setValue("totalReductions", data.total_reductions);
+      setValue("verifiedCredits", data.verified_credits);
+      setValue("biodiversityRecords", data.biodiversity_records, 0);
+
+      // IMPACT SUMMARY
+      setValue("sequestrationValue", data.total_sequestration);
+      setValue("issuedCredits", data.issued_credits);
+
+      // RESTORATION PROGRESS
+      const targetArea = Number(data.total_target_area ?? 0);
+      const restoredArea = Number(data.total_restored_area ?? 0);
+
+      let progress = 0;
+
+      if (targetArea > 0) {
+        progress = Math.min((restoredArea / targetArea) * 100, 100);
+      }
+
+      setValue("restorationValue", progress, 1);
+
+      const progressBar = document.getElementById("restorationProgress");
+
+      if (progressBar) {
+        progressBar.style.width = progress + "%";
+      }
+
+      const restorationDescription = document.getElementById(
+        "restorationDescription",
+      );
+
+      if (restorationDescription) {
+        restorationDescription.textContent =
+          restoredArea.toLocaleString("en-IN") +
+          " restored out of " +
+          targetArea.toLocaleString("en-IN") +
+          " target area";
+      }
+
+      // CHARTS
+      updateCarbonChart(data);
+      updateProjectChart(data);
+    } catch (error) {
+      console.error("Dashboard error:", error);
+
+      showDashboardError(
+        "Dashboard information could not be loaded. Please refresh the page.",
+      );
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    loadDashboard();
+  });
+</script>
+
+{% endblock %}

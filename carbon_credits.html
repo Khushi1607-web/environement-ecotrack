@@ -1,0 +1,665 @@
+{% extends "base.html" %} {% block title %}Carbon Credit Management | EcoTrack{%
+endblock %} {% block extra_css %}
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #405447;
+  }
+
+  .form-group input,
+  .form-group select,
+  .search-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dfe8e1;
+    border-radius: 7px;
+    outline: none;
+    background: white;
+    font-size: 13px;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #247548;
+    box-shadow: 0 0 0 3px rgba(36, 117, 72, 0.08);
+  }
+
+  .form-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+  }
+
+  .secondary-btn {
+    background: #eaf3ec;
+    color: #247548;
+    padding: 11px 17px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .search-input {
+    margin-bottom: 18px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 950px;
+  }
+
+  th {
+    background: #edf5ee;
+    color: #315b3f;
+    text-align: left;
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid #edf0ed;
+    font-size: 12px;
+    color: #526057;
+  }
+
+  .status {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pending {
+    background: #fff2dc;
+    color: #a66a13;
+  }
+
+  .under-review {
+    background: #e8f0fb;
+    color: #3265a3;
+  }
+
+  .verified {
+    background: #e3f3e7;
+    color: #247548;
+  }
+
+  .rejected {
+    background: #ffeded;
+    color: #ba4141;
+  }
+
+  .action-btn {
+    padding: 7px 11px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    margin: 2px;
+  }
+
+  .edit-btn {
+    background: #e8f0fb;
+    color: #3265a3;
+  }
+
+  .delete-btn {
+    background: #ffeded;
+    color: #ba4141;
+  }
+
+  .message {
+    display: none;
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 7px;
+    font-size: 13px;
+  }
+
+  .message.success {
+    display: block;
+    background: #e8f5eb;
+    color: #247548;
+  }
+
+  .message.error {
+    display: block;
+    background: #fff0ef;
+    color: #b33d35;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #849087;
+  }
+
+  @media (max-width: 650px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full,
+    .form-buttons {
+      grid-column: auto;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="page-heading">
+  <h1>Carbon Credit Management</h1>
+  <p>Track estimated, verified and issued carbon credits across projects.</p>
+</div>
+
+<div class="card" id="creditFormCard">
+  <h2
+    id="formTitle"
+    style="font-size: 17px; color: #244533; margin-bottom: 20px"
+  >
+    Add Carbon Credit Record
+  </h2>
+
+  <form id="creditForm" class="form-grid">
+    <div class="form-group full">
+      <label>Select Project *</label>
+      <select id="project_id" required>
+        <option value="">Loading projects...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Estimated Credits *</label>
+      <input
+        type="number"
+        id="estimated_credits"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Verified Credits</label>
+      <input
+        type="number"
+        id="verified_credits"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Issued Credits</label>
+      <input
+        type="number"
+        id="issued_credits"
+        min="0"
+        step="0.01"
+        value="0"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Verification Status</label>
+      <select id="verification_status">
+        <option value="Pending">Pending</option>
+        <option value="Under Review">Under Review</option>
+        <option value="Verified">Verified</option>
+        <option value="Rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Certification Standard</label>
+      <input
+        type="text"
+        id="standard_name"
+        placeholder="e.g. Verra VCS, Gold Standard"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Verification Date</label>
+      <input type="date" id="verification_date" />
+    </div>
+
+    <div class="form-buttons">
+      <button type="submit" class="btn" id="saveBtn">Add Credit Record</button>
+
+      <button
+        type="button"
+        class="secondary-btn"
+        id="cancelBtn"
+        onclick="resetForm()"
+        style="display: none"
+      >
+        Cancel Edit
+      </button>
+    </div>
+  </form>
+
+  <div id="formMessage" class="message"></div>
+</div>
+
+<div class="card">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    "
+  >
+    <h2 style="font-size: 17px; color: #244533">Carbon Credit Records</h2>
+
+    <span id="recordCount" style="font-size: 12px; color: #78857d">
+      Loading...
+    </span>
+  </div>
+
+  <input
+    type="text"
+    id="searchInput"
+    class="search-input"
+    placeholder="Search credit records..."
+  />
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Estimated</th>
+          <th>Verified</th>
+          <th>Issued</th>
+          <th>Status</th>
+          <th>Standard</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="creditTable">
+        <tr>
+          <td colspan="7" class="empty-state">Loading records...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tableMessage" class="message"></div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  let records = [];
+  let projects = [];
+  let editingId = null;
+  let currentRole = "";
+
+  const form = document.getElementById("creditForm");
+  const table = document.getElementById("creditTable");
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(
+      /[&<>"']/g,
+      (char) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char],
+    );
+  }
+
+  function showMessage(id, text, type) {
+    const element = document.getElementById(id);
+    element.textContent = text;
+    element.className = "message " + type;
+  }
+
+  async function loadSession() {
+    try {
+      const response = await fetch("/api/auth/check-session");
+
+      if (!response.ok) {
+        window.location.href = "/login";
+        return false;
+      }
+
+      const data = await response.json();
+      currentRole = data.user_role || "";
+      return true;
+    } catch (error) {
+      showMessage("tableMessage", "Unable to check login session.", "error");
+      return false;
+    }
+  }
+
+  async function loadProjects() {
+    const response = await fetch("/api/projects/");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Unable to load projects");
+    }
+
+    projects = data.projects || [];
+
+    const dropdown = document.getElementById("project_id");
+    dropdown.innerHTML = '<option value="">Select project</option>';
+
+    projects.forEach((project) => {
+      const option = document.createElement("option");
+      option.value = project.id;
+      option.textContent = project.project_name;
+      dropdown.appendChild(option);
+    });
+  }
+
+  async function loadRecords() {
+    try {
+      const response = await fetch("/api/carbon-credits/");
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || "Unable to load credit records",
+        );
+      }
+
+      records = data.records || data.credits || [];
+
+      document.getElementById("recordCount").textContent =
+        records.length + " records";
+
+      renderRecords();
+    } catch (error) {
+      table.innerHTML = `<tr><td colspan="7" class="empty-state">
+            ${escapeHTML(error.message)}
+        </td></tr>`;
+    }
+  }
+
+  function renderRecords() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered = records.filter((record) =>
+      [record.project_name, record.standard_name, record.verification_status]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="7" class="empty-state">
+            No carbon credit records found.
+        </td></tr>`;
+      return;
+    }
+
+    table.innerHTML = filtered
+      .map((record) => {
+        const statusClass = String(record.verification_status || "")
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+        const editButton = ["admin", "manager"].includes(currentRole)
+          ? `<button class="action-btn edit-btn"
+                       onclick="editRecord(${Number(record.id)})">Edit</button>`
+          : "";
+
+        const deleteButton =
+          currentRole === "admin"
+            ? `<button class="action-btn delete-btn"
+                       onclick="deleteRecord(${Number(record.id)})">Delete</button>`
+            : "";
+
+        return `
+        <tr>
+            <td><strong>${escapeHTML(record.project_name)}</strong></td>
+            <td>${Number(record.estimated_credits || 0).toFixed(2)}</td>
+            <td>${Number(record.verified_credits || 0).toFixed(2)}</td>
+            <td>${Number(record.issued_credits || 0).toFixed(2)}</td>
+            <td>
+                <span class="status ${statusClass}">
+                    ${escapeHTML(record.verification_status || "Pending")}
+                </span>
+            </td>
+            <td>${escapeHTML(record.standard_name || "-")}</td>
+            <td>${editButton}${deleteButton}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      showMessage("formMessage", "Permission denied.", "error");
+      return;
+    }
+
+    const estimated = Number(
+      document.getElementById("estimated_credits").value,
+    );
+    const verified = Number(document.getElementById("verified_credits").value);
+    const issued = Number(document.getElementById("issued_credits").value);
+    const status = document.getElementById("verification_status").value;
+
+    if (
+      ![estimated, verified, issued].every(
+        (value) => Number.isFinite(value) && value >= 0,
+      )
+    ) {
+      showMessage(
+        "formMessage",
+        "Credit values must be non-negative.",
+        "error",
+      );
+      return;
+    }
+
+    if (verified > estimated || issued > verified) {
+      showMessage(
+        "formMessage",
+        "Verified credits cannot exceed estimated credits, and issued credits cannot exceed verified credits.",
+        "error",
+      );
+      return;
+    }
+
+    if (status !== "Verified" && (verified > 0 || issued > 0)) {
+      showMessage(
+        "formMessage",
+        "Only mark credits as verified after verification. Set status to Verified before recording verified or issued credits.",
+        "error",
+      );
+      return;
+    }
+
+    const payload = {
+      project_id: Number(document.getElementById("project_id").value),
+      estimated_credits: estimated,
+      verified_credits: verified,
+      issued_credits: issued,
+      verification_status: status,
+      standard_name: document.getElementById("standard_name").value.trim(),
+      verification_date:
+        document.getElementById("verification_date").value || null,
+    };
+
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+
+    try {
+      const response = await fetch(
+        editingId
+          ? `/api/carbon-credits/update/${editingId}`
+          : "/api/carbon-credits/add",
+        {
+          method: editingId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || result.message || "Unable to save credit record",
+        );
+      }
+
+      showMessage(
+        "formMessage",
+        result.message || "Carbon credit record saved successfully.",
+        "success",
+      );
+
+      resetForm();
+      await loadRecords();
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function editRecord(id) {
+    const record = records.find((item) => Number(item.id) === Number(id));
+    if (!record) return;
+
+    editingId = id;
+
+    document.getElementById("project_id").value = record.project_id;
+    document.getElementById("estimated_credits").value =
+      record.estimated_credits;
+    document.getElementById("verified_credits").value = record.verified_credits;
+    document.getElementById("issued_credits").value = record.issued_credits;
+    document.getElementById("verification_status").value =
+      record.verification_status;
+    document.getElementById("standard_name").value = record.standard_name || "";
+    document.getElementById("verification_date").value =
+      record.verification_date || "";
+
+    document.getElementById("formTitle").textContent =
+      "Update Carbon Credit Record";
+    document.getElementById("saveBtn").textContent = "Update Record";
+    document.getElementById("cancelBtn").style.display = "inline-block";
+
+    document
+      .getElementById("creditFormCard")
+      .scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function deleteRecord(id) {
+    if (currentRole !== "admin") {
+      showMessage(
+        "tableMessage",
+        "Only administrators can delete records.",
+        "error",
+      );
+      return;
+    }
+
+    if (!confirm("Delete this carbon credit record?")) return;
+
+    try {
+      const response = await fetch(`/api/carbon-credits/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || result.message || "Delete failed");
+      }
+
+      showMessage(
+        "tableMessage",
+        result.message || "Record deleted successfully.",
+        "success",
+      );
+      await loadRecords();
+    } catch (error) {
+      showMessage("tableMessage", error.message, "error");
+    }
+  }
+
+  function resetForm() {
+    form.reset();
+    editingId = null;
+
+    document.getElementById("estimated_credits").value = 0;
+    document.getElementById("verified_credits").value = 0;
+    document.getElementById("issued_credits").value = 0;
+
+    document.getElementById("formTitle").textContent =
+      "Add Carbon Credit Record";
+    document.getElementById("saveBtn").textContent = "Add Credit Record";
+    document.getElementById("cancelBtn").style.display = "none";
+  }
+
+  document
+    .getElementById("searchInput")
+    .addEventListener("input", renderRecords);
+
+  (async function initialize() {
+    const loggedIn = await loadSession();
+    if (!loggedIn) return;
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      document.getElementById("creditFormCard").style.display = "none";
+    }
+
+    try {
+      await loadProjects();
+      await loadRecords();
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    }
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,478 @@
+{% extends "base.html" %} {% block title %}User Management | EcoTrack{% endblock
+%} {% block extra_css %}
+<style>
+  .users-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .users-header h1 {
+    color: #204b32;
+    font-size: 26px;
+  }
+
+  .users-header p {
+    color: #78857d;
+    margin-top: 6px;
+    font-size: 13px;
+  }
+
+  .user-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .user-stat {
+    background: white;
+    padding: 20px;
+    border: 1px solid #e5ece6;
+    border-radius: 13px;
+    box-shadow: 0 3px 12px rgba(20, 55, 30, 0.04);
+  }
+
+  .user-stat span {
+    color: #78857d;
+    font-size: 12px;
+  }
+
+  .user-stat h2 {
+    color: #247548;
+    font-size: 27px;
+    margin-top: 10px;
+  }
+
+  .users-panel {
+    background: white;
+    border: 1px solid #e5ece6;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 3px 12px rgba(20, 55, 30, 0.04);
+  }
+
+  .panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .panel-heading h2 {
+    color: #244533;
+    font-size: 17px;
+  }
+
+  .search-input {
+    padding: 10px 13px;
+    border: 1px solid #dce5dd;
+    border-radius: 8px;
+    outline: none;
+    width: 240px;
+    max-width: 100%;
+  }
+
+  .search-input:focus {
+    border-color: #247548;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+  }
+
+  .users-table th {
+    background: #f3f7f3;
+    color: #617367;
+    text-align: left;
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  .users-table td {
+    padding: 15px 14px;
+    border-bottom: 1px solid #edf1ed;
+    color: #435448;
+    font-size: 13px;
+  }
+
+  .users-table tr:hover {
+    background: #fafcf9;
+  }
+
+  .role-select {
+    padding: 8px;
+    border: 1px solid #dce5dd;
+    border-radius: 7px;
+    background: white;
+    color: #244533;
+    outline: none;
+  }
+
+  .role-select:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .status-message {
+    display: none;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+
+  .status-message.success {
+    display: block;
+    color: #17643a;
+    background: #e9f7ed;
+  }
+
+  .status-message.error {
+    display: block;
+    color: #a33232;
+    background: #fff0ef;
+  }
+
+  .user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #e5f3e8;
+    color: #247548;
+    font-weight: 700;
+    margin-right: 9px;
+  }
+
+  .loading-text,
+  .empty-text {
+    text-align: center;
+    padding: 30px;
+    color: #78857d;
+  }
+
+  @media (max-width: 700px) {
+    .user-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .users-panel {
+      padding: 14px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="users-page" data-user-id="{{ session.get('user_id', 0) }}">
+  <div class="users-header">
+    <div>
+      <h1>User Management</h1>
+      <p>Manage registered EcoTrack users and their access roles.</p>
+    </div>
+  </div>
+
+  <div class="user-stats">
+    <div class="user-stat">
+      <span>Total Registered Users</span>
+      <h2 id="totalUsers">0</h2>
+    </div>
+
+    <div class="user-stat">
+      <span>Administrators</span>
+      <h2 id="adminUsers">0</h2>
+    </div>
+
+    <div class="user-stat">
+      <span>Field Officers</span>
+      <h2 id="officerUsers">0</h2>
+    </div>
+  </div>
+
+  <div class="users-panel">
+    <div class="panel-heading">
+      <h2>Registered Users</h2>
+
+      <input
+        type="text"
+        id="userSearch"
+        class="search-input"
+        placeholder="Search name or email..."
+        oninput="filterUsers()"
+      />
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="table-wrapper">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Registered On</th>
+          </tr>
+        </thead>
+
+        <tbody id="usersTableBody">
+          <tr>
+            <td colspan="5" class="loading-text">Loading users...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+
+<script>
+  const currentUserId = Number(
+    document.querySelector(".users-page").dataset.userId,
+  );
+
+  let allUsers = [];
+
+  function showMessage(message, type) {
+    const box = document.getElementById("statusMessage");
+
+    box.textContent = message;
+    box.className = "status-message " + type;
+
+    setTimeout(() => {
+      box.className = "status-message";
+      box.textContent = "";
+    }, 4000);
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[character],
+    );
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("en-IN");
+  }
+
+  // LOAD USERS
+  async function loadUsers() {
+    const tbody = document.getElementById("usersTableBody");
+
+    try {
+      const response = await fetch("/api/auth/users", {
+        credentials: "same-origin",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to load users.");
+      }
+
+      allUsers = data.users || [];
+
+      updateStatistics();
+      renderUsers(allUsers);
+    } catch (error) {
+      tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-text">
+                    ${escapeHTML(error.message)}
+                </td>
+            </tr>
+        `;
+    }
+  }
+
+  // UPDATE STATISTICS
+  function updateStatistics() {
+    document.getElementById("totalUsers").textContent = allUsers.length;
+
+    document.getElementById("adminUsers").textContent = allUsers.filter(
+      (user) => user.role === "admin",
+    ).length;
+
+    document.getElementById("officerUsers").textContent = allUsers.filter(
+      (user) => user.role === "field_officer",
+    ).length;
+  }
+
+  // DISPLAY USERS
+  function renderUsers(users) {
+    const tbody = document.getElementById("usersTableBody");
+
+    if (!users.length) {
+      tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-text">
+                    No users found.
+                </td>
+            </tr>
+        `;
+
+      return;
+    }
+
+    tbody.innerHTML = users
+      .map((user) => {
+        const isCurrentUser = Number(user.id) === currentUserId;
+
+        return `
+            <tr>
+
+                <td>${escapeHTML(user.id)}</td>
+
+                <td>
+                    <span class="user-avatar">
+                        ${escapeHTML(
+                          (user.name || "U").charAt(0).toUpperCase(),
+                        )}
+                    </span>
+
+                    ${escapeHTML(user.name)}
+                </td>
+
+                <td>${escapeHTML(user.email)}</td>
+
+                <td>
+                    <select
+                        class="role-select"
+                        data-user-id="${escapeHTML(user.id)}"
+                        onchange="updateRole(this)"
+                        ${isCurrentUser ? "disabled" : ""}
+                    >
+
+                        <option value="admin"
+                            ${user.role === "admin" ? "selected" : ""}>
+                            Admin
+                        </option>
+
+                        <option value="viewer"
+                            ${user.role === "viewer" ? "selected" : ""}>
+                            Viewer
+                        </option>
+
+                        <option value="field_officer"
+                            ${user.role === "field_officer" ? "selected" : ""}>
+                            Field Officer
+                        </option>
+
+                    </select>
+                </td>
+
+                <td>${escapeHTML(formatDate(user.created_at))}</td>
+
+            </tr>
+        `;
+      })
+      .join("");
+  }
+
+  // UPDATE USER ROLE
+  async function updateRole(selectElement) {
+    const userId = selectElement.dataset.userId;
+    const newRole = selectElement.value;
+
+    const oldUser = allUsers.find((user) => Number(user.id) === Number(userId));
+
+    if (!oldUser) return;
+
+    const oldRole = oldUser.role;
+
+    if (!confirm("Are you sure you want to change this user role?")) {
+      selectElement.value = oldRole;
+      return;
+    }
+
+    selectElement.disabled = true;
+
+    try {
+      const response = await fetch(`/api/auth/users/${userId}/role`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: newRole,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Role update failed.");
+      }
+
+      oldUser.role = newRole;
+
+      updateStatistics();
+
+      showMessage("User role updated successfully!", "success");
+    } catch (error) {
+      selectElement.value = oldRole;
+
+      showMessage(error.message, "error");
+    } finally {
+      selectElement.disabled = Number(userId) === currentUserId;
+    }
+  }
+
+  // SEARCH USERS
+  function filterUsers() {
+    const search = document
+      .getElementById("userSearch")
+      .value.toLowerCase()
+      .trim();
+
+    const filteredUsers = allUsers.filter(
+      (user) =>
+        (user.name || "").toLowerCase().includes(search) ||
+        (user.email || "").toLowerCase().includes(search) ||
+        (user.role || "").toLowerCase().includes(search),
+    );
+
+    renderUsers(filteredUsers);
+  }
+
+  // INITIAL LOAD
+  loadUsers();
+</script>
+
+{% endblock %}

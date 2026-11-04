@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{% block title %}EcoTrack{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- IMPORTANT: Font Awesome icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --green-dark: #173f2c;
+        --green: #247548;
+        --green-light: #eaf3ec;
+        --background: #f5f7f5;
+        --text: #24372b;
+        --muted: #78857d;
+        --border: #e6ece7;
+        --white: #ffffff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", Arial, sans-serif;
+        background: var(--background);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      /* HEADER */
+
+      .top-header {
+        min-height: 72px;
+        background: var(--white);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 35px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--green-dark);
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .brand-icon {
+        font-size: 29px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 17px;
+      }
+
+      .user-details {
+        text-align: right;
+      }
+
+      .user-name {
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .user-role {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 4px;
+        text-transform: capitalize;
+      }
+
+      .logout-btn {
+        border: 1px solid var(--border);
+        background: white;
+        color: #425348;
+        padding: 10px 16px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .logout-btn:hover {
+        background: #fff0ef;
+        border-color: #e9c6c3;
+        color: #b33d35;
+      }
+
+      /* NAVIGATION */
+
+      .navigation {
+        background: white;
+        border-bottom: 1px solid var(--border);
+        padding: 0 35px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+
+      .navigation a {
+        padding: 16px 13px;
+        text-decoration: none;
+        color: #66746b;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        border-bottom: 3px solid transparent;
+        transition: 0.2s;
+      }
+
+      .navigation a:hover,
+      .navigation a.active {
+        color: var(--green);
+        border-bottom-color: var(--green);
+        background: var(--green-light);
+      }
+
+      /* MAIN CONTENT */
+
+      .main-container {
+        max-width: 1500px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 32px 35px;
+        min-height: calc(100vh - 180px);
+      }
+
+      .page-heading {
+        margin-bottom: 26px;
+      }
+
+      .page-heading h1 {
+        color: var(--green-dark);
+        font-size: 27px;
+        margin-bottom: 8px;
+      }
+
+      .page-heading p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      /* CARDS */
+
+      .card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 22px;
+        box-shadow: 0 3px 12px rgba(20, 55, 30, 0.035);
+      }
+
+      /* BUTTONS */
+
+      .btn {
+        display: inline-block;
+        background: var(--green);
+        color: white;
+        padding: 11px 18px;
+        border: none;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .btn:hover {
+        background: var(--green-dark);
+      }
+
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+      }
+
+      /* FOOTER */
+
+      .footer {
+        background: white;
+        border-top: 1px solid var(--border);
+        padding: 21px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      /* RESPONSIVE DESIGN */
+
+      @media (max-width: 700px) {
+        .top-header {
+          padding: 12px 16px;
+        }
+
+        .brand {
+          font-size: 20px;
+        }
+
+        .navigation {
+          padding: 0 12px;
+        }
+
+        .navigation a {
+          padding: 14px 10px;
+        }
+
+        .main-container {
+          padding: 23px 15px;
+        }
+
+        .user-details {
+          display: none;
+        }
+
+        .page-heading h1 {
+          font-size: 23px;
+        }
+
+        .card {
+          padding: 17px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .logout-btn {
+          padding: 8px 10px;
+        }
+
+        .brand {
+          font-size: 18px;
+        }
+      }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    <!-- HEADER -->
+
+    <header class="top-header">
+      <a href="/dashboard" class="brand">
+        <span class="brand-icon">🌱</span>
+        EcoTrack
+      </a>
+
+      {% if session.get('user_id') %}
+
+      <div class="header-right">
+        <div class="user-details">
+          <div class="user-name">{{ session.get('user_name', 'User') }}</div>
+
+          <div class="user-role">
+            {{ session.get('user_role', '')|replace('_', ' ') }}
+          </div>
+        </div>
+
+        <button class="logout-btn" onclick="logoutUser()">↪ Logout</button>
+      </div>
+
+      {% endif %}
+    </header>
+
+    <!-- NAVIGATION -->
+
+    {% if session.get('user_id') %}
+
+    <nav class="navigation">
+      <a href="/dashboard">📊 Dashboard</a>
+      <a href="/projects">📁 Projects</a>
+      <a href="/sustainability">🌱 Sustainability</a>
+      <a href="/restoration">🌳 Restoration</a>
+      <a href="/carbon">☁️ Carbon</a>
+      <a href="/carbon-credits">🪙 Carbon Credits</a>
+      <a href="/biodiversity">🦋 Biodiversity</a>
+      <a href="/reports">📈 Reports</a>
+
+      {% if session.get('user_role') == 'admin' %}
+      <a href="/users">👥 Users</a>
+      {% endif %} {% if session.get('user_role') in ['admin', 'viewer'] %}
+      <a href="/audit">📋 Audit History</a>
+      {% endif %}
+    </nav>
+
+    {% endif %}
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main-container">{% block content %} {% endblock %}</main>
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+      © 2026 EcoTrack. Environmental Sustainability Management System. 🌿
+    </footer>
+
+    <!-- LOGOUT JAVASCRIPT -->
+
+    <script>
+      async function logoutUser() {
+        if (!confirm("Are you sure you want to logout?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/auth/logout", {
+            method: "POST",
+          });
+
+          if (response.ok) {
+            window.location.href = "/login";
+          } else {
+            alert("Logout failed. Please try again.");
+          }
+        } catch (error) {
+          alert("Unable to connect to the server.");
+        }
+      }
+
+      // Highlight current navigation page
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const currentPath = window.location.pathname;
+
+        document.querySelectorAll(".navigation a").forEach((link) => {
+          const linkPath = new URL(link.href).pathname;
+
+          if (linkPath === currentPath) {
+            link.classList.add("active");
+          }
+        });
+      });
+    </script>
+
+    <!-- COMMON JAVASCRIPT -->
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

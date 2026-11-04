@@ -1,0 +1,645 @@
+{% extends "base.html" %} {% block title %}Projects | EcoTrack{% endblock %} {%
+block extra_css %}
+<style>
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+
+  .page-header h2 {
+    margin: 0;
+  }
+
+  .project-card {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    margin-bottom: 25px;
+  }
+
+  .project-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    color: #344b3b;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 11px;
+    border: 1px solid #d5ded6;
+    border-radius: 7px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  .btn {
+    padding: 10px 17px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: #286b45;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #e7eee8;
+    color: #28563a;
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+  }
+
+  .btn-edit {
+    background: #e8a928;
+    color: #222;
+  }
+
+  .btn:hover {
+    opacity: 0.88;
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .project-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+  }
+
+  .project-table th,
+  .project-table td {
+    padding: 13px;
+    border-bottom: 1px solid #e8eee9;
+    text-align: left;
+  }
+
+  .project-table th {
+    background: #edf4ee;
+    color: #28563a;
+  }
+
+  .project-table tr:hover {
+    background: #f8fbf8;
+  }
+
+  .status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .status-active {
+    background: #d9f2df;
+    color: #17652c;
+  }
+
+  .status-completed {
+    background: #dce9fa;
+    color: #174b85;
+  }
+
+  .status-on-hold {
+    background: #fff0cc;
+    color: #8a5a00;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 7px;
+  }
+
+  .message {
+    padding: 12px;
+    border-radius: 7px;
+    margin-bottom: 15px;
+    display: none;
+  }
+
+  .success-message {
+    background: #d9f2df;
+    color: #17652c;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #842029;
+  }
+
+  .search-box {
+    padding: 11px;
+    width: 100%;
+    max-width: 350px;
+    border: 1px solid #d5ded6;
+    border-radius: 7px;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 700px) {
+    .project-form {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width,
+    .form-actions {
+      grid-column: 1;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div id="projectsPage" data-user-role="{{ session.get('user_role', '') }}">
+  <div class="page-header">
+    <div>
+      <h2>Environmental Projects</h2>
+      <p>Manage and monitor environmental sustainability projects.</p>
+    </div>
+  </div>
+
+  <div id="successMessage" class="message success-message"></div>
+  <div id="errorMessage" class="message error-message"></div>
+
+  <!-- PROJECT FORM: ADMIN ONLY -->
+  {% if session.get('user_role') == 'admin' %}
+  <div class="project-card" id="projectFormCard">
+    <h3 id="formTitle">Add New Project</h3>
+
+    <form id="projectForm" class="project-form">
+      <input type="hidden" id="projectId" />
+
+      <div class="form-group">
+        <label for="projectName">Project Name *</label>
+        <input type="text" id="projectName" required />
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select id="category" required>
+          <option value="">Select Category</option>
+          <option value="Agroforestry">Agroforestry</option>
+          <option value="Tree Plantation">Tree Plantation</option>
+          <option value="Ecosystem Restoration">Ecosystem Restoration</option>
+          <option value="Sustainable Agriculture">
+            Sustainable Agriculture
+          </option>
+          <option value="Biodiversity Conservation">
+            Biodiversity Conservation
+          </option>
+          <option value="Carbon Management">Carbon Management</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location *</label>
+        <input type="text" id="location" required />
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status *</label>
+        <select id="status" required>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
+          <option value="On Hold">On Hold</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="startDate">Start Date *</label>
+        <input type="date" id="startDate" required />
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" />
+      </div>
+
+      <div class="form-group full-width">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          placeholder="Enter project description"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submitButton">
+          Add Project
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          id="cancelButton"
+          onclick="resetForm()"
+        >
+          Clear
+        </button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- PROJECT LIST -->
+  <div class="project-card">
+    <div class="page-header">
+      <h3>Project List</h3>
+
+      <input
+        type="text"
+        id="searchInput"
+        class="search-box"
+        placeholder="Search projects..."
+      />
+    </div>
+
+    <div class="table-container">
+      <table class="project-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Project Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Start Date</th>
+
+            {% if session.get('user_role') == 'admin' %}
+            <th>Actions</th>
+            {% endif %}
+          </tr>
+        </thead>
+
+        <tbody id="projectTable">
+          <tr>
+            <td colspan="7">Loading projects...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+
+<script>
+  // Read role from HTML instead of embedding Jinja inside JavaScript.
+  const userRole = document.getElementById("projectsPage").dataset.userRole;
+
+  let projects = [];
+
+  const API_URL = "/api/projects/";
+
+  // Display messages
+  function showMessage(message, type) {
+    const successBox = document.getElementById("successMessage");
+    const errorBox = document.getElementById("errorMessage");
+
+    successBox.style.display = "none";
+    errorBox.style.display = "none";
+
+    const box = type === "success" ? successBox : errorBox;
+
+    box.textContent = message;
+    box.style.display = "block";
+
+    setTimeout(() => {
+      box.style.display = "none";
+    }, 4000);
+  }
+
+  // Load all projects
+  async function loadProjects() {
+    const table = document.getElementById("projectTable");
+
+    try {
+      const response = await fetch(API_URL);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to load projects.");
+      }
+
+      projects = Array.isArray(data) ? data : data.projects || [];
+
+      renderProjects(projects);
+    } catch (error) {
+      table.innerHTML = `
+                <tr>
+                    <td colspan="7">${escapeHTML(error.message)}</td>
+                </tr>
+            `;
+    }
+  }
+
+  // Prevent HTML injection when displaying database values
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (character) {
+      const replacements = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+
+      return replacements[character];
+    });
+  }
+
+  // Render project table
+  function renderProjects(projectList) {
+    const table = document.getElementById("projectTable");
+
+    if (!projectList || projectList.length === 0) {
+      table.innerHTML = `
+                <tr>
+                    <td colspan="7">No projects found.</td>
+                </tr>
+            `;
+      return;
+    }
+
+    table.innerHTML = projectList
+      .map((project) => {
+        const id = Number(project.id);
+
+        let statusClass = "status-active";
+
+        if (project.status === "Completed") {
+          statusClass = "status-completed";
+        } else if (project.status === "On Hold") {
+          statusClass = "status-on-hold";
+        }
+
+        let actionButtons = "";
+
+        if (userRole === "admin") {
+          actionButtons = `
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-edit"
+                                onclick="editProject(${id})">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-danger"
+                                onclick="deleteProject(${id})">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+        }
+
+        return `
+                <tr>
+                    <td>${id}</td>
+                    <td>${escapeHTML(project.project_name)}</td>
+                    <td>${escapeHTML(project.category)}</td>
+                    <td>${escapeHTML(project.location)}</td>
+                    <td>
+                        <span class="status ${statusClass}">
+                            ${escapeHTML(project.status)}
+                        </span>
+                    </td>
+                    <td>${escapeHTML(project.start_date || "-")}</td>
+                    ${actionButtons}
+                </tr>
+            `;
+      })
+      .join("");
+  }
+
+  // Search projects
+  document.getElementById("searchInput").addEventListener("input", function () {
+    const searchValue = this.value.toLowerCase();
+
+    const filteredProjects = projects.filter((project) => {
+      return (
+        String(project.project_name || "")
+          .toLowerCase()
+          .includes(searchValue) ||
+        String(project.category || "")
+          .toLowerCase()
+          .includes(searchValue) ||
+        String(project.location || "")
+          .toLowerCase()
+          .includes(searchValue) ||
+        String(project.status || "")
+          .toLowerCase()
+          .includes(searchValue)
+      );
+    });
+
+    renderProjects(filteredProjects);
+  });
+
+  // Add or update project - ADMIN ONLY
+  const projectForm = document.getElementById("projectForm");
+
+  if (projectForm) {
+    projectForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      if (userRole !== "admin") {
+        showMessage("You are not authorized to modify projects.", "error");
+        return;
+      }
+
+      const projectId = document.getElementById("projectId").value;
+
+      const projectData = {
+        project_name: document.getElementById("projectName").value.trim(),
+        category: document.getElementById("category").value,
+        location: document.getElementById("location").value.trim(),
+        status: document.getElementById("status").value,
+        start_date: document.getElementById("startDate").value,
+        end_date: document.getElementById("endDate").value || null,
+        description: document.getElementById("description").value.trim(),
+      };
+
+      if (
+        !projectData.project_name ||
+        !projectData.category ||
+        !projectData.location ||
+        !projectData.start_date
+      ) {
+        showMessage("Please fill in all required fields.", "error");
+        return;
+      }
+
+      if (
+        projectData.end_date &&
+        projectData.end_date < projectData.start_date
+      ) {
+        showMessage("End date cannot be earlier than start date.", "error");
+        return;
+      }
+
+      const url = projectId ? API_URL + projectId : API_URL;
+
+      const method = projectId ? "PUT" : "POST";
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(projectData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Project operation failed.");
+        }
+
+        showMessage(
+          projectId
+            ? "Project updated successfully!"
+            : "Project added successfully!",
+          "success",
+        );
+
+        resetForm();
+        loadProjects();
+      } catch (error) {
+        showMessage(error.message, "error");
+      }
+    });
+  }
+
+  // Edit project - ADMIN ONLY
+  function editProject(id) {
+    if (userRole !== "admin") {
+      showMessage("You are not authorized to edit projects.", "error");
+      return;
+    }
+
+    const project = projects.find((item) => Number(item.id) === Number(id));
+
+    if (!project) {
+      showMessage("Project not found.", "error");
+      return;
+    }
+
+    document.getElementById("projectId").value = project.id;
+    document.getElementById("projectName").value = project.project_name || "";
+    document.getElementById("category").value = project.category || "";
+    document.getElementById("location").value = project.location || "";
+    document.getElementById("status").value = project.status || "Active";
+    document.getElementById("startDate").value = formatDate(project.start_date);
+
+    document.getElementById("endDate").value = formatDate(project.end_date);
+
+    document.getElementById("description").value = project.description || "";
+
+    document.getElementById("formTitle").textContent = "Edit Project";
+    document.getElementById("submitButton").textContent = "Update Project";
+
+    document.getElementById("projectFormCard").scrollIntoView({
+      behavior: "smooth",
+    });
+  }
+
+  // Format date for date input
+  function formatDate(value) {
+    if (!value) return "";
+
+    return String(value).substring(0, 10);
+  }
+
+  // Delete project - ADMIN ONLY
+  async function deleteProject(id) {
+    if (userRole !== "admin") {
+      showMessage("You are not authorized to delete projects.", "error");
+      return;
+    }
+
+    const confirmed = confirm("Are you sure you want to delete this project?");
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(API_URL + id, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to delete project.");
+      }
+
+      showMessage("Project deleted successfully!", "success");
+
+      loadProjects();
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  }
+
+  // Reset form
+  function resetForm() {
+    if (!projectForm) return;
+
+    projectForm.reset();
+
+    document.getElementById("projectId").value = "";
+
+    document.getElementById("formTitle").textContent = "Add New Project";
+
+    document.getElementById("submitButton").textContent = "Add Project";
+  }
+
+  // Initial load
+  loadProjects();
+</script>
+
+{% endblock %}

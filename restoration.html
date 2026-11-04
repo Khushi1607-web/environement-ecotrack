@@ -1,0 +1,628 @@
+{% extends "base.html" %} {% block title %}Ecosystem Restoration | EcoTrack{%
+endblock %} {% block extra_css %}
+<style>
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #405447;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .search-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dfe8e1;
+    border-radius: 7px;
+    outline: none;
+    background: white;
+    font-size: 13px;
+  }
+
+  .form-group textarea {
+    min-height: 85px;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: #247548;
+    box-shadow: 0 0 0 3px rgba(36, 117, 72, 0.08);
+  }
+
+  .form-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+  }
+
+  .secondary-btn {
+    background: #eaf3ec;
+    color: #247548;
+    padding: 11px 17px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .search-input {
+    margin-bottom: 18px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+  }
+
+  th {
+    background: #edf5ee;
+    color: #315b3f;
+    text-align: left;
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid #edf0ed;
+    font-size: 12px;
+    color: #526057;
+  }
+
+  .progress-track {
+    width: 100px;
+    height: 7px;
+    background: #e8eee9;
+    border-radius: 10px;
+    margin-top: 7px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #4d9a67;
+    border-radius: 10px;
+  }
+
+  .action-btn {
+    padding: 7px 11px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 11px;
+    margin: 2px;
+  }
+
+  .edit-btn {
+    background: #e8f0fb;
+    color: #3265a3;
+  }
+
+  .delete-btn {
+    background: #ffeded;
+    color: #ba4141;
+  }
+
+  .message {
+    display: none;
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 7px;
+    font-size: 13px;
+  }
+
+  .message.success {
+    display: block;
+    background: #e8f5eb;
+    color: #247548;
+  }
+
+  .message.error {
+    display: block;
+    background: #fff0ef;
+    color: #b33d35;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #849087;
+  }
+
+  @media (max-width: 650px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full,
+    .form-buttons {
+      grid-column: auto;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="page-heading">
+  <h1>Ecosystem Restoration</h1>
+  <p>
+    Monitor restoration projects, restored areas and ecosystem recovery
+    progress.
+  </p>
+</div>
+
+<div class="card" id="restorationFormCard">
+  <h2
+    id="formTitle"
+    style="font-size: 17px; color: #244533; margin-bottom: 20px"
+  >
+    Add Restoration Record
+  </h2>
+
+  <form id="restorationForm" class="form-grid">
+    <div class="form-group full">
+      <label>Select Project *</label>
+      <select id="project_id" required>
+        <option value="">Loading projects...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Restoration Type *</label>
+      <select id="restoration_type" required>
+        <option value="">Select restoration type</option>
+        <option>Forest Restoration</option>
+        <option>Wetland Restoration</option>
+        <option>Land Restoration</option>
+        <option>Grassland Restoration</option>
+        <option>River Restoration</option>
+        <option>Coastal Restoration</option>
+        <option>Habitat Restoration</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Measurement Unit *</label>
+      <select id="unit" required>
+        <option value="Acres">Acres</option>
+        <option value="Hectares">Hectares</option>
+        <option value="Sq. Km">Sq. Km</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Target Area *</label>
+      <input
+        type="number"
+        id="target_area"
+        min="0.01"
+        step="0.01"
+        required
+        placeholder="Enter target area"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Restored Area</label>
+      <input
+        type="number"
+        id="restored_area"
+        min="0"
+        step="0.01"
+        value="0"
+        placeholder="Enter restored area"
+      />
+    </div>
+
+    <div class="form-group full">
+      <label>Description</label>
+      <textarea
+        id="description"
+        placeholder="Describe the restoration work..."
+      ></textarea>
+    </div>
+
+    <div class="form-buttons">
+      <button type="submit" class="btn" id="saveBtn">Add Restoration</button>
+
+      <button
+        type="button"
+        class="secondary-btn"
+        id="cancelBtn"
+        onclick="resetForm()"
+        style="display: none"
+      >
+        Cancel Edit
+      </button>
+    </div>
+  </form>
+
+  <div id="formMessage" class="message"></div>
+</div>
+
+<div class="card">
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    "
+  >
+    <h2 style="font-size: 17px; color: #244533">Restoration Records</h2>
+
+    <span id="recordCount" style="font-size: 12px; color: #78857d">
+      Loading...
+    </span>
+  </div>
+
+  <input
+    type="text"
+    id="searchInput"
+    class="search-input"
+    placeholder="Search restoration records..."
+  />
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Restoration Type</th>
+          <th>Target Area</th>
+          <th>Restored Area</th>
+          <th>Progress</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="restorationTable">
+        <tr>
+          <td colspan="6" class="empty-state">Loading records...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tableMessage" class="message"></div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  let records = [];
+  let projects = [];
+  let editingId = null;
+  let currentRole = "";
+
+  const form = document.getElementById("restorationForm");
+  const table = document.getElementById("restorationTable");
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(
+      /[&<>"']/g,
+      (char) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char],
+    );
+  }
+
+  function showMessage(id, text, type) {
+    const element = document.getElementById(id);
+    element.textContent = text;
+    element.className = "message " + type;
+  }
+
+  async function loadSession() {
+    try {
+      const response = await fetch("/api/auth/check-session");
+
+      if (!response.ok) {
+        window.location.href = "/login";
+        return false;
+      }
+
+      const data = await response.json();
+      currentRole = data.user_role || "";
+      return true;
+    } catch (error) {
+      showMessage("tableMessage", "Unable to check login session.", "error");
+      return false;
+    }
+  }
+
+  async function loadProjects() {
+    try {
+      const response = await fetch("/api/projects/");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || "Unable to load projects",
+        );
+      }
+
+      projects = data.projects || [];
+
+      const dropdown = document.getElementById("project_id");
+      dropdown.innerHTML = '<option value="">Select project</option>';
+
+      projects.forEach((project) => {
+        const option = document.createElement("option");
+        option.value = project.id;
+        option.textContent = project.project_name;
+        dropdown.appendChild(option);
+      });
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    }
+  }
+
+  async function loadRecords() {
+    try {
+      const response = await fetch("/api/restoration/");
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Unable to load records");
+      }
+
+      records = data.restoration || data.records || [];
+
+      document.getElementById("recordCount").textContent =
+        records.length + " records";
+
+      renderRecords();
+    } catch (error) {
+      table.innerHTML = `<tr><td colspan="6" class="empty-state">
+            ${escapeHTML(error.message)}
+        </td></tr>`;
+    }
+  }
+
+  function renderRecords() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+
+    const filtered = records.filter((record) => {
+      return [record.project_name, record.restoration_type, record.description]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="6" class="empty-state">
+            No restoration records found.
+        </td></tr>`;
+      return;
+    }
+
+    table.innerHTML = filtered
+      .map((record) => {
+        const target = Number(record.target_area || 0);
+        const restored = Number(record.restored_area || 0);
+        const progress = target > 0 ? (restored / target) * 100 : 0;
+        const width = Math.max(0, Math.min(progress, 100));
+
+        const editButton = ["admin", "manager"].includes(currentRole)
+          ? `<button class="action-btn edit-btn"
+                       onclick="editRecord(${Number(record.id)})">Edit</button>`
+          : "";
+
+        const deleteButton =
+          currentRole === "admin"
+            ? `<button class="action-btn delete-btn"
+                       onclick="deleteRecord(${Number(record.id)})">Delete</button>`
+            : "";
+
+        return `
+        <tr>
+            <td><strong>${escapeHTML(record.project_name)}</strong></td>
+            <td>${escapeHTML(record.restoration_type || "-")}</td>
+            <td>${target.toFixed(2)} ${escapeHTML(record.unit || "")}</td>
+            <td>${restored.toFixed(2)} ${escapeHTML(record.unit || "")}</td>
+            <td>
+                ${progress.toFixed(2)}%
+                <div class="progress-track">
+                    <div class="progress-fill" style="width:${width}%"></div>
+                </div>
+            </td>
+            <td>${editButton}${deleteButton}</td>
+        </tr>`;
+      })
+      .join("");
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      showMessage("formMessage", "Permission denied.", "error");
+      return;
+    }
+
+    const target = Number(document.getElementById("target_area").value);
+    const restored = Number(document.getElementById("restored_area").value);
+
+    if (
+      !Number.isFinite(target) ||
+      target <= 0 ||
+      !Number.isFinite(restored) ||
+      restored < 0
+    ) {
+      showMessage(
+        "formMessage",
+        "Enter a positive target and non-negative restored area.",
+        "error",
+      );
+      return;
+    }
+
+    const payload = {
+      project_id: Number(document.getElementById("project_id").value),
+      restoration_type: document.getElementById("restoration_type").value,
+      target_area: target,
+      restored_area: restored,
+      unit: document.getElementById("unit").value,
+      description: document.getElementById("description").value.trim(),
+    };
+
+    const button = document.getElementById("saveBtn");
+    button.disabled = true;
+
+    try {
+      const url = editingId
+        ? `/api/restoration/update/${editingId}`
+        : "/api/restoration/add";
+
+      const response = await fetch(url, {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || result.message || "Unable to save restoration record",
+        );
+      }
+
+      showMessage(
+        "formMessage",
+        result.message || "Restoration record saved successfully.",
+        "success",
+      );
+
+      resetForm();
+      await loadRecords();
+    } catch (error) {
+      showMessage("formMessage", error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function editRecord(id) {
+    const record = records.find((item) => Number(item.id) === Number(id));
+    if (!record) return;
+
+    editingId = id;
+
+    document.getElementById("project_id").value = record.project_id;
+    document.getElementById("restoration_type").value =
+      record.restoration_type || "";
+    document.getElementById("target_area").value = record.target_area;
+    document.getElementById("restored_area").value = record.restored_area;
+    document.getElementById("unit").value = record.unit || "Acres";
+    document.getElementById("description").value = record.description || "";
+
+    document.getElementById("formTitle").textContent =
+      "Update Restoration Record";
+    document.getElementById("saveBtn").textContent = "Update Restoration";
+    document.getElementById("cancelBtn").style.display = "inline-block";
+
+    document
+      .getElementById("restorationFormCard")
+      .scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function deleteRecord(id) {
+    if (currentRole !== "admin") {
+      showMessage(
+        "tableMessage",
+        "Only administrators can delete records.",
+        "error",
+      );
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this restoration record?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/restoration/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || result.message || "Delete failed");
+      }
+
+      showMessage(
+        "tableMessage",
+        result.message || "Record deleted successfully.",
+        "success",
+      );
+      await loadRecords();
+    } catch (error) {
+      showMessage("tableMessage", error.message, "error");
+    }
+  }
+
+  function resetForm() {
+    form.reset();
+    editingId = null;
+
+    document.getElementById("restored_area").value = 0;
+    document.getElementById("formTitle").textContent = "Add Restoration Record";
+    document.getElementById("saveBtn").textContent = "Add Restoration";
+    document.getElementById("cancelBtn").style.display = "none";
+  }
+
+  document
+    .getElementById("searchInput")
+    .addEventListener("input", renderRecords);
+
+  (async function initialize() {
+    const loggedIn = await loadSession();
+    if (!loggedIn) return;
+
+    if (!["admin", "manager"].includes(currentRole)) {
+      document.getElementById("restorationFormCard").style.display = "none";
+    }
+
+    await loadProjects();
+    await loadRecords();
+  })();
+</script>
+{% endblock %}

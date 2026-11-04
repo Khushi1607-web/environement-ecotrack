@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrack | Sustainability Management</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f1f6f2;
+        margin: 0;
+        padding: 30px;
+        color: #263b2d;
+      }
+
+      .container {
+        max-width: 1150px;
+        margin: auto;
+      }
+
+      h1 {
+        color: #237447;
+      }
+
+      .card {
+        background: white;
+        padding: 25px;
+        margin-top: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+      }
+
+      label {
+        display: block;
+        margin-top: 12px;
+        font-weight: bold;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 7px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      button {
+        padding: 11px 18px;
+        border: none;
+        border-radius: 6px;
+        background: #237447;
+        color: white;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+
+      .edit-btn {
+        background: #2874a6;
+      }
+
+      .delete-btn {
+        background: #c0392b;
+        margin-left: 5px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        padding: 13px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+
+      th {
+        background: #e4f0e7;
+      }
+
+      .progress {
+        background: #e5e5e5;
+        height: 9px;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: #27965b;
+      }
+
+      .back {
+        color: #237447;
+        text-decoration: none;
+      }
+
+      #message {
+        margin-top: 15px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>🌱 Sustainability Management</h1>
+      <p>Monitor and manage environmental sustainability activities.</p>
+
+      <a href="/dashboard" class="back">← Back to Dashboard</a>
+
+      <div class="card">
+        <h2 id="formTitle">Add Sustainability Activity</h2>
+
+        <form id="activityForm">
+          <label>Project</label>
+          <select id="project_id" required>
+            <option value="">Select Project</option>
+          </select>
+
+          <label>Activity Type</label>
+          <select id="activity_type" required>
+            <option value="">Select Activity</option>
+            <option>Tree Plantation</option>
+            <option>Water Conservation</option>
+            <option>Energy Conservation</option>
+            <option>Waste Recycling</option>
+            <option>Sustainable Agriculture</option>
+          </select>
+
+          <label>Target Value</label>
+          <input
+            type="number"
+            id="target_value"
+            min="0.01"
+            step="0.01"
+            required
+          />
+
+          <label>Achieved Value</label>
+          <input
+            type="number"
+            id="achieved_value"
+            min="0"
+            step="0.01"
+            value="0"
+            required
+          />
+
+          <label>Unit</label>
+          <input
+            type="text"
+            id="unit"
+            placeholder="Trees, Litres, kWh, Kg, Acres"
+            required
+          />
+
+          <label>Activity Date</label>
+          <input type="date" id="activity_date" />
+
+          <button type="submit" id="submitButton">Add Activity</button>
+          <button type="button" id="cancelButton" hidden onclick="resetForm()">
+            Cancel Edit
+          </button>
+        </form>
+
+        <p id="message"></p>
+      </div>
+
+      <div class="card">
+        <h2>All Sustainability Activities</h2>
+
+        <input
+          type="text"
+          id="search"
+          placeholder="Search activities..."
+          oninput="displayActivities()"
+        />
+
+        <table>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Activity</th>
+              <th>Target</th>
+              <th>Achieved</th>
+              <th>Progress</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="activityTable">
+            <tr>
+              <td colspan="6">Loading activities...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      let activities = [];
+      let editingId = null;
+
+      // LOAD PROJECTS
+      async function loadProjects() {
+        const response = await fetch("/api/projects/");
+
+        if (!response.ok) return;
+
+        const result = await response.json();
+
+        const select = document.getElementById("project_id");
+
+        result.projects.forEach((project) => {
+          const option = document.createElement("option");
+
+          option.value = project.id;
+          option.textContent = project.project_name;
+
+          select.appendChild(option);
+        });
+      }
+
+      // LOAD ACTIVITIES
+      async function loadActivities() {
+        const response = await fetch("/api/sustainability/");
+
+        if (!response.ok) {
+          document.getElementById("activityTable").innerHTML =
+            '<tr><td colspan="6">Unable to load activities.</td></tr>';
+          return;
+        }
+
+        const result = await response.json();
+
+        activities = result.activities || [];
+
+        displayActivities();
+      }
+
+      // DISPLAY ACTIVITIES
+      function displayActivities() {
+        const search = document.getElementById("search").value.toLowerCase();
+
+        const filtered = activities.filter(
+          (a) =>
+            (a.activity_type || "").toLowerCase().includes(search) ||
+            (a.project_name || "").toLowerCase().includes(search),
+        );
+
+        const table = document.getElementById("activityTable");
+
+        table.innerHTML = "";
+
+        if (filtered.length === 0) {
+          table.innerHTML =
+            '<tr><td colspan="6">No activities found.</td></tr>';
+          return;
+        }
+
+        filtered.forEach((a) => {
+          const row = document.createElement("tr");
+
+          const cells = [
+            a.project_name,
+            a.activity_type,
+            `${a.target_value} ${a.unit}`,
+            `${a.achieved_value} ${a.unit}`,
+          ];
+
+          cells.forEach((value) => {
+            const td = document.createElement("td");
+            td.textContent = value;
+            row.appendChild(td);
+          });
+
+          const progress = Number(a.progress) || 0;
+
+          const progressCell = document.createElement("td");
+
+          progressCell.innerHTML = `
+            <div>${progress}%</div>
+            <div class="progress">
+                <div class="progress-fill"
+                     style="width:${Math.min(progress, 100)}%">
+                </div>
+            </div>
+        `;
+
+          row.appendChild(progressCell);
+
+          const actions = document.createElement("td");
+
+          const edit = document.createElement("button");
+          edit.textContent = "Edit";
+          edit.className = "edit-btn";
+          edit.onclick = () => editActivity(a.id);
+
+          const remove = document.createElement("button");
+          remove.textContent = "Delete";
+          remove.className = "delete-btn";
+          remove.onclick = () => deleteActivity(a.id);
+
+          actions.append(edit, remove);
+          row.appendChild(actions);
+
+          table.appendChild(row);
+        });
+      }
+
+      // ADD OR UPDATE ACTIVITY
+      document
+        .getElementById("activityForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const data = {
+            project_id: Number(document.getElementById("project_id").value),
+            activity_type: document.getElementById("activity_type").value,
+            target_value: Number(document.getElementById("target_value").value),
+            achieved_value: Number(
+              document.getElementById("achieved_value").value,
+            ),
+            unit: document.getElementById("unit").value,
+            activity_date:
+              document.getElementById("activity_date").value || null,
+          };
+
+          const url = editingId
+            ? `/api/sustainability/update/${editingId}`
+            : "/api/sustainability/add";
+
+          const method = editingId ? "PUT" : "POST";
+
+          const response = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          const message = document.getElementById("message");
+
+          message.textContent = result.message;
+
+          if (response.ok) {
+            message.style.color = "green";
+            resetForm();
+            await loadActivities();
+          } else {
+            message.style.color = "red";
+          }
+        });
+
+      // EDIT ACTIVITY
+      function editActivity(id) {
+        const a = activities.find((item) => item.id === id);
+
+        if (!a) return;
+
+        editingId = id;
+
+        document.getElementById("project_id").value = a.project_id;
+        document.getElementById("activity_type").value = a.activity_type;
+        document.getElementById("target_value").value = a.target_value;
+        document.getElementById("achieved_value").value = a.achieved_value;
+        document.getElementById("unit").value = a.unit;
+        document.getElementById("activity_date").value = a.activity_date
+          ? String(a.activity_date).substring(0, 10)
+          : "";
+
+        document.getElementById("formTitle").textContent = "Update Activity";
+        document.getElementById("submitButton").textContent = "Update Activity";
+        document.getElementById("cancelButton").hidden = false;
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // DELETE ACTIVITY
+      async function deleteActivity(id) {
+        if (!confirm("Delete this sustainability activity?")) return;
+
+        const response = await fetch(`/api/sustainability/delete/${id}`, {
+          method: "DELETE",
+        });
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        if (response.ok) {
+          await loadActivities();
+        }
+      }
+
+      // RESET FORM
+      function resetForm() {
+        editingId = null;
+
+        document.getElementById("activityForm").reset();
+
+        document.getElementById("formTitle").textContent =
+          "Add Sustainability Activity";
+
+        document.getElementById("submitButton").textContent = "Add Activity";
+
+        document.getElementById("cancelButton").hidden = true;
+      }
+
+      // INITIAL LOAD
+      async function initializePage() {
+        await loadProjects();
+        await loadActivities();
+      }
+
+      initializePage();
+    </script>
+  </body>
+</html>

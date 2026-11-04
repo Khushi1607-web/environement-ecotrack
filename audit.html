@@ -1,0 +1,461 @@
+{% extends "base.html" %} {% block title %}Audit History | EcoTrack{% endblock
+%} {% block extra_css %}
+<style>
+  .audit-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .audit-heading h1 {
+    color: #173f2c;
+    font-size: 27px;
+    margin-bottom: 7px;
+  }
+
+  .audit-heading p {
+    color: #78857d;
+    font-size: 13px;
+  }
+
+  .audit-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .audit-stat {
+    background: #fff;
+    border: 1px solid #e6ece7;
+    border-radius: 14px;
+    padding: 23px;
+    box-shadow: 0 4px 15px rgba(20, 55, 30, 0.04);
+  }
+
+  .audit-stat span {
+    color: #78857d;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .audit-stat h2 {
+    color: #247548;
+    font-size: 28px;
+    margin-top: 12px;
+  }
+
+  .audit-card {
+    background: #fff;
+    border: 1px solid #e6ece7;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 4px 15px rgba(20, 55, 30, 0.04);
+  }
+
+  .audit-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .audit-card-header h2 {
+    color: #244533;
+    font-size: 17px;
+  }
+
+  .audit-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .audit-controls input,
+  .audit-controls select {
+    padding: 10px 12px;
+    border: 1px solid #dce6df;
+    border-radius: 8px;
+    outline: none;
+    font-size: 12px;
+    background: #fff;
+  }
+
+  .audit-controls input:focus,
+  .audit-controls select:focus {
+    border-color: #247548;
+  }
+
+  .audit-btn {
+    background: #247548;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .audit-btn:hover {
+    background: #173f2c;
+  }
+
+  .audit-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+  }
+
+  .audit-table th {
+    background: #f4f8f5;
+    color: #607267;
+    text-align: left;
+    padding: 14px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .audit-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #edf1ed;
+    color: #53645a;
+    font-size: 12px;
+  }
+
+  .audit-table tr:hover td {
+    background: #fbfdfb;
+  }
+
+  .role-badge,
+  .action-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #e8f4eb;
+    color: #247548;
+  }
+
+  .action-badge {
+    background: #edf2fa;
+    color: #42628f;
+  }
+
+  .audit-details {
+    max-width: 240px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .audit-message {
+    display: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 15px;
+  }
+
+  .audit-message.error {
+    display: block;
+    color: #a83232;
+    background: #fff0ef;
+  }
+
+  .audit-message.info {
+    display: block;
+    color: #52685a;
+    background: #f2f7f3;
+  }
+
+  .audit-empty {
+    text-align: center;
+    padding: 35px 15px;
+    color: #849087;
+    font-size: 13px;
+  }
+
+  @media (max-width: 750px) {
+    .audit-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .audit-card {
+      padding: 15px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+
+<div class="audit-page">
+  <div class="audit-heading">
+    <h1>Audit History</h1>
+    <p>Track user activities and changes made across the EcoTrack platform.</p>
+  </div>
+
+  <div class="audit-stats">
+    <div class="audit-stat">
+      <span>Total Activities</span>
+      <h2 id="totalLogs">0</h2>
+    </div>
+
+    <div class="audit-stat">
+      <span>Admin Activities</span>
+      <h2 id="adminLogs">0</h2>
+    </div>
+
+    <div class="audit-stat">
+      <span>Field Officer Activities</span>
+      <h2 id="officerLogs">0</h2>
+    </div>
+  </div>
+
+  <div class="audit-card">
+    <div class="audit-card-header">
+      <h2>Activity Records</h2>
+
+      <div class="audit-controls">
+        <input
+          type="text"
+          id="searchAudit"
+          placeholder="Search user, module or action..."
+        />
+
+        <select id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+          <option value="field_officer">Field Officer</option>
+        </select>
+
+        <button class="audit-btn" onclick="loadAuditLogs()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div id="auditMessage" class="audit-message"></div>
+
+    <div class="audit-table-wrap">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Module</th>
+            <th>Record ID</th>
+            <th>Details</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+
+        <tbody id="auditTableBody">
+          <tr>
+            <td colspan="8" class="audit-empty">Loading audit records...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+
+<script>
+  let allAuditLogs = [];
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function (char) {
+      const entities = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      };
+      return entities[char];
+    });
+  }
+
+  function showAuditMessage(message, type) {
+    const element = document.getElementById("auditMessage");
+    element.textContent = message;
+    element.className = "audit-message " + type;
+  }
+
+  function clearAuditMessage() {
+    const element = document.getElementById("auditMessage");
+    element.textContent = "";
+    element.className = "audit-message";
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return escapeHTML(value);
+    }
+
+    return date.toLocaleString("en-IN");
+  }
+
+  function updateAuditStats(logs) {
+    document.getElementById("totalLogs").textContent = logs.length;
+
+    document.getElementById("adminLogs").textContent = logs.filter(
+      (log) => String(log.user_role || "").toLowerCase() === "admin",
+    ).length;
+
+    document.getElementById("officerLogs").textContent = logs.filter(
+      (log) => String(log.user_role || "").toLowerCase() === "field_officer",
+    ).length;
+  }
+
+  function renderAuditLogs(logs) {
+    const tbody = document.getElementById("auditTableBody");
+
+    if (!logs.length) {
+      tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="audit-empty">
+                    No audit records found.
+                </td>
+            </tr>
+        `;
+      return;
+    }
+
+    tbody.innerHTML = logs
+      .map(
+        (log) => `
+        <tr>
+            <td>${escapeHTML(log.id)}</td>
+            <td>${escapeHTML(log.user_name)}</td>
+            <td>
+                <span class="role-badge">
+                    ${escapeHTML(log.user_role)}
+                </span>
+            </td>
+            <td>
+                <span class="action-badge">
+                    ${escapeHTML(log.action)}
+                </span>
+            </td>
+            <td>${escapeHTML(log.module)}</td>
+            <td>${escapeHTML(log.record_id ?? "—")}</td>
+            <td class="audit-details">
+                ${escapeHTML(log.details || "—")}
+            </td>
+            <td>${formatDate(log.created_at)}</td>
+        </tr>
+    `,
+      )
+      .join("");
+  }
+
+  function filterAuditLogs() {
+    const search = document
+      .getElementById("searchAudit")
+      .value.toLowerCase()
+      .trim();
+
+    const role = document.getElementById("roleFilter").value.toLowerCase();
+
+    const filtered = allAuditLogs.filter((log) => {
+      const searchableText = [
+        log.user_name,
+        log.user_role,
+        log.action,
+        log.module,
+        log.details,
+        log.record_id,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = searchableText.includes(search);
+
+      const matchesRole =
+        !role || String(log.user_role || "").toLowerCase() === role;
+
+      return matchesSearch && matchesRole;
+    });
+
+    renderAuditLogs(filtered);
+  }
+
+  async function loadAuditLogs() {
+    clearAuditMessage();
+
+    const tbody = document.getElementById("auditTableBody");
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="audit-empty">
+                Loading records...
+            </td>
+        </tr>
+    `;
+
+    try {
+      const response = await fetch("/api/audit/");
+
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to load audit history.");
+      }
+
+      allAuditLogs = Array.isArray(data)
+        ? data
+        : data.logs || data.audit_logs || [];
+
+      updateAuditStats(allAuditLogs);
+      filterAuditLogs();
+
+      if (!allAuditLogs.length) {
+        showAuditMessage(
+          "No activity has been recorded yet. New changes will appear here once audit logging is connected.",
+          "info",
+        );
+      }
+    } catch (error) {
+      tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="audit-empty">
+                    Unable to load audit records.
+                </td>
+            </tr>
+        `;
+
+      showAuditMessage(error.message, "error");
+    }
+  }
+
+  document
+    .getElementById("searchAudit")
+    .addEventListener("input", filterAuditLogs);
+
+  document
+    .getElementById("roleFilter")
+    .addEventListener("change", filterAuditLogs);
+
+  loadAuditLogs();
+</script>
+
+{% endblock %}
