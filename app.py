@@ -11,7 +11,7 @@ from carbon_credit_routes import carbon_credit_bp
 from biodiversity_routes import biodiversity_bp
 from report_routes import report_bp
 from audit_routes import audit_bp
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 
 app.config.from_object(Config)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
