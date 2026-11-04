@@ -2,15 +2,15 @@ from flask import Flask, jsonify, render_template, redirect, session
 from config import Config
 from database import get_db_connection
 
-from routes.auth_routes import auth_bp, bcrypt
-from routes.project_routes import project_bp
-from routes.sustainability_routes import sustainability_bp
-from routes.restoration_routes import restoration_bp
-from routes.carbon_routes import carbon_bp
-from routes.carbon_credit_routes import carbon_credit_bp
-from routes.biodiversity_routes import biodiversity_bp
-from routes.report_routes import report_bp
-from routes.audit_routes import audit_bp
+from auth_routes import auth_bp, bcrypt
+from project_routes import project_bp
+from sustainability_routes import sustainability_bp
+from restoration_routes import restoration_bp
+from carbon_routes import carbon_bp
+from carbon_credit_routes import carbon_credit_bp
+from biodiversity_routes import biodiversity_bp
+from report_routes import report_bp
+from audit_routes import audit_bp
 app = Flask(__name__)
 
 app.config.from_object(Config)
